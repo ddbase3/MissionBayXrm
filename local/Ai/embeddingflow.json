@@ -58,10 +58,10 @@
 			"model": "text-embedding-3-small"
 		}},
 
-                { "id": "embedding", "type": "openaiembeddingmodelagentresource", "config": {
-                        "apikey": { "mode": "config", "section": "openai", "key": "apikey" },
-                        "model": { "mode": "fixed", "value": "text-embedding-3-small" }
-                }},
+		{ "id": "embedding", "type": "openaiembeddingmodelagentresource", "config": {
+			"apikey": { "mode": "config", "section": "openai", "key": "apikey" },
+			"model": { "mode": "fixed", "value": "text-embedding-3-small" }
+		}},
 
 		{ "id": "dummyembedding", "type": "dummyembeddingmodelagentresource", "config": {
 			"dimension": { "mode": "fixed", "value": 1536 }
