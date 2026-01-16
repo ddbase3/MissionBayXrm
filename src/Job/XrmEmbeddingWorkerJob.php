@@ -22,7 +22,7 @@ final class XrmEmbeddingWorkerJob implements IJob {
 	}
 
 	public function isActive() {
-		return false;
+		return true;
 	}
 
 	public function getPriority() {

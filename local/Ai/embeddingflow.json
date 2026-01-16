@@ -6,7 +6,7 @@
 			"docks": {
 				"extractor": ["extractor"],
 				"parser": ["contactparser", "addressparser", "dateparser", "fileparser",
-					"productparser", "projectparser", "resourceparser",
+					"productparser", "projectparser", "accountparser", "resourceparser",
 					"tagparser", "taskparser", "textparser", "defaultparser"],
 				"chunker": ["chunker"],
 				"embedder": ["embeddercache"],
@@ -21,7 +21,7 @@
 	],
 	"resources": [
 		{ "id": "extractor", "type": "xrmembeddingqueueextractoragentresource", "config": {
-			"claim_limit": { "mode": "fixed", "value": 100 }
+			"claim_limit": { "mode": "fixed", "value": 10 }
 		}},
 
 		{ "id": "contactparser", "type": "xrmcontactmetaparseragentresource" },
@@ -35,6 +35,8 @@
 		{ "id": "productparser", "type": "xrmproductmetaparseragentresource" },
 
 		{ "id": "projectparser", "type": "xrmprojectmetaparseragentresource" },
+
+		{ "id": "accountparser", "type": "xrmaccountmetaparseragentresource" },
 
 		{ "id": "resourceparser", "type": "xrmresourcemetaparseragentresource" },
 
