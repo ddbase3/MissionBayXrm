@@ -1,0 +1,79 @@
+{
+	"nodes": [
+		{
+			"id": "embedding",
+			"type": "aiembeddingnode",
+			"docks": {
+				"extractor": ["extractor"],
+				"parser": ["contactparser", "addressparser", "dateparser", "fileparser",
+					"productparser", "projectparser", "resourceparser",
+					"tagparser", "taskparser", "textparser", "defaultparser"],
+				"chunker": ["chunker"],
+				"embedder": ["embeddercache"],
+				"vectordb": ["vectordb"],
+				"logger": ["logger"]
+			},
+			"inputs": {
+				"mode": "replace",
+				"debug": 1
+			}
+		}
+	],
+	"resources": [
+		{ "id": "extractor", "type": "xrmembeddingqueueextractoragentresource", "config": {
+			"claim_limit": { "mode": "fixed", "value": 100 }
+		}},
+
+		{ "id": "contactparser", "type": "xrmcontactmetaparseragentresource" },
+
+		{ "id": "addressparser", "type": "xrmaddressmetaparseragentresource" },
+
+		{ "id": "dateparser", "type": "xrmdatemetaparseragentresource" },
+
+		{ "id": "fileparser", "type": "xrmfilemetaparseragentresource" },
+
+		{ "id": "productparser", "type": "xrmproductmetaparseragentresource" },
+
+		{ "id": "projectparser", "type": "xrmprojectmetaparseragentresource" },
+
+		{ "id": "resourceparser", "type": "xrmresourcemetaparseragentresource" },
+
+		{ "id": "tagparser", "type": "xrmtagmetaparseragentresource" },
+
+		{ "id": "taskparser", "type": "xrmtaskmetaparseragentresource" },
+
+		{ "id": "textparser", "type": "xrmtextmetaparseragentresource" },
+
+		{ "id": "defaultparser", "type": "structuredobjectparseragentresource" },
+
+		{ "id": "chunker", "type": "xrmchunkeragentresource", "config": {
+			"max_length": { "mode": "fixed", "value": 2000 },
+			"min_length": { "mode": "fixed", "value": 500 },
+			"overlap": { "mode": "fixed", "value": 50 }
+		}},
+
+		{ "id": "embeddercache", "type": "embeddingcacheagentresource", "docks": {
+			"embedding": ["embedding"]
+		}, "config": {
+			"model": "text-embedding-3-small"
+		}},
+
+                { "id": "embedding", "type": "openaiembeddingmodelagentresource", "config": {
+                        "apikey": { "mode": "config", "section": "openai", "key": "apikey" },
+                        "model": { "mode": "fixed", "value": "text-embedding-3-small" }
+                }},
+
+		{ "id": "dummyembedding", "type": "dummyembeddingmodelagentresource", "config": {
+			"dimension": { "mode": "fixed", "value": 1536 }
+		}},
+
+		{ "id": "vectordb", "type": "qdrantvectorstoreagentresource", "config": {
+			"endpoint": { "mode": "config", "section": "qdrant", "key": "endpoint" },
+			"apikey": { "mode": "config", "section": "qdrant", "key": "apikey" }
+		}},
+
+		{ "id": "logger", "type": "loggerresource", "config": {
+			"scope": { "mode": "fixed", "value": "xrm_embedding_worker" }
+		}}
+	]
+}
