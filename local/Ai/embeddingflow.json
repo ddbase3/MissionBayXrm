@@ -55,7 +55,7 @@
 		{ "id": "embeddercache", "type": "embeddingcacheagentresource", "docks": {
 			"embedding": ["embedding"]
 		}, "config": {
-			"model": "text-embedding-3-small"
+			"model": { "mode": "fixed", "value": "text-embedding-3-small" }
 		}},
 
 		{ "id": "embedding", "type": "openaiembeddingmodelagentresource", "config": {
