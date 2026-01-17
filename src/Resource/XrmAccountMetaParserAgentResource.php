@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace MissionBay\Resource;
+namespace MissionBayXrm\Resource;
 
 use MissionBay\Api\IAgentContentParser;
 use MissionBay\Dto\AgentContentItem;
 use MissionBay\Dto\AgentParsedContent;
+use MissionBay\Resource\AbstractAgentResource;
 
 final class XrmAccountMetaParserAgentResource extends AbstractAgentResource implements IAgentContentParser {
 
