@@ -74,24 +74,29 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 				continue;
 			}
 
+			$jobId = (int)($job['job_id'] ?? 0);
+
 			$uuidHex = strtoupper((string)($job['source_uuid_hex'] ?? ''));
 			$verHex = strtoupper((string)($job['source_version_hex'] ?? ''));
 			$collectionKey = trim((string)($job['collection_key'] ?? ''));
 
-			if ($uuidHex === '' || $collectionKey === '') {
-				$this->failFromJobRow($job, 'Extractor: missing source_uuid or collection_key', false);
+			if ($jobId <= 0 || $uuidHex === '' || $collectionKey === '') {
+				$this->failFromJobRow($job, 'Extractor: missing job_id/source_uuid/collection_key', false);
 				continue;
 			}
 
+			// Safety-net: if seen says another version is current, drop this job as superseded.
 			if ($jobType === 'upsert' && $verHex !== '') {
 				if ($this->isSupersededBySeen($uuidHex, $verHex, $collectionKey)) {
-					$this->markSuperseded((int)$job['job_id']);
+					$this->markSuperseded($jobId);
 					continue;
 				}
 			}
 
 			$item = $this->buildItemFromJob($job);
 			if ($item === null) {
+				// For upsert: missing sysentry/payload -> retry a bit, then error.
+				// For delete: should never happen (no payload needed), but be defensive.
 				$this->failFromJobRow($job, 'Extractor: missing payload / sysentry not found', true);
 				continue;
 			}
@@ -117,7 +122,7 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 
 		if ($item->isDelete()) {
 			$uuidHex = strtoupper(trim((string)($item->metadata['content_uuid'] ?? '')));
-			$collectionKey = trim($item->collectionKey);
+			$collectionKey = trim((string)$item->collectionKey);
 
 			if ($uuidHex !== '' && $collectionKey !== '') {
 				$this->markSeenDeletedAt($uuidHex, $collectionKey);
@@ -314,7 +319,6 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 		if ($entryId > 0) {
 			$domainMeta['public'] = $this->isEntryPublic($entryId) ? 1 : 0;
 
-			// tags + ref_uuids
 			$tags = $this->loadTagsByEntryId($entryId);
 			if (!empty($tags)) {
 				$domainMeta['tags'] = $tags;
@@ -325,8 +329,6 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 				$domainMeta['ref_uuids'] = $refUuids;
 			}
 
-			// NEW: name (sysname) -> domain metadata
-			// Query: SELECT `name` FROM `base3system_sysname` WHERE entry_id=2 ORDER BY `lang_id` DESC LIMIT 1;
 			$name = $this->loadNameByEntryId($entryId);
 			if ($name !== null && $name !== '') {
 				$domainMeta['name'] = $name;
@@ -410,13 +412,9 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 	}
 
 	// ---------------------------------------------------------
-	// NEW: tags + refs + public + name
+	// tags + refs + public + name
 	// ---------------------------------------------------------
 
-	/**
-	 * Public rule:
-	 * - entry is public if base3system_sysuseraccess has (entry_id=<id>, user_id=1, mode='visitor')
-	 */
 	private function isEntryPublic(int $entryId): bool {
 		if ($entryId <= 0) {
 			return false;
@@ -434,10 +432,6 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 		return !empty($row);
 	}
 
-	/**
-	 * Loads best matching name from base3system_sysname.
-	 * Prefers higher lang_id (same as your example query).
-	 */
 	private function loadNameByEntryId(int $entryId): ?string {
 		if ($entryId <= 0) {
 			return null;
@@ -493,8 +487,6 @@ final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResourc
 	}
 
 	/**
-	 * Loads connected entry UUIDs (peers) via sysallocview.
-	 *
 	 * @return array<int,string> UUID hex (upper, 32 chars)
 	 */
 	private function loadRefUuidsByEntryId(int $entryId): array {

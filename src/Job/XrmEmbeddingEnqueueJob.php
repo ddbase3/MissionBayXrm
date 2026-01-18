@@ -4,37 +4,32 @@ namespace MissionBayXrm\Job;
 
 use Base3\Worker\Api\IJob;
 use Base3\Database\Api\IDatabase;
+use Base3\State\Api\IStateStore;
 
 /**
  * XrmEmbeddingEnqueueJob
  *
  * Worker A (enqueue):
- * - Scans the source table incrementally (checkpoint by changed timestamp)
- * - Writes work items into the embedding job queue
- * - Tracks last seen state per source UUID (seen table)
- * - Detects deletions by comparing seen vs current source (missing rows)
- *
- * IMPORTANT (as agreed):
- * - We must persist `collection_key` in BOTH:
- *   - base3_embedding_job (so Worker B knows where to upsert/delete)
- *   - base3_embedding_seen (so delete jobs can be created even if the source row is gone)
- *
- * This makes the queue system generic and safe for multi-collection setups.
+ * - Scans sysentry incrementally (cursor: last_changed)
+ * - Enqueues upsert jobs and delete jobs
+ * - Persists last run timestamps and cursors in IStateStore (no checkpoint table)
  */
 final class XrmEmbeddingEnqueueJob implements IJob {
 
 	private const CHECKPOINT_NAME = 'sysentry';
-	private const MIN_INTERVAL_SECONDS = 900; // 15 minutes
+	private const MIN_INTERVAL_SECONDS = 900;
 	private const CHANGED_BATCH = 5000;
 	private const DELETE_BATCH = 2000;
 
-	/**
-	 * Fallback collection key if source type alias is missing.
-	 * Keep stable and short.
-	 */
 	private const DEFAULT_COLLECTION_KEY = 'default';
 
-	public function __construct(private readonly IDatabase $db) {}
+	private const DEFAULT_LAST_CHANGED = '1970-01-01 00:00:00';
+	private const DEFAULT_LAST_RUN_AT = '1970-01-01 00:00:00';
+
+	public function __construct(
+		private readonly IDatabase $db,
+		private readonly IStateStore $state
+	) {}
 
 	public static function getName(): string {
 		return 'xrmembeddingenqueuejob';
@@ -56,15 +51,15 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 
 		$this->ensureTables();
 
-		$checkpoint = $this->loadCheckpoint();
+		$checkpoint = $this->loadCheckpointFromState();
 		if (!$this->shouldRun($checkpoint)) {
 			return 'Skip (min interval not reached)';
 		}
 
-		$changed = $this->enqueueChanged(self::CHANGED_BATCH, $checkpoint['last_changed']);
+		$changed = $this->enqueueChanged(self::CHANGED_BATCH, (string)$checkpoint['last_changed']);
 		$deleted = $this->enqueueDeletes(self::DELETE_BATCH);
 
-		$this->touchCheckpointRunAt();
+		$this->touchRunAt();
 
 		return 'Enqueue done - changed: ' . $changed . ', deletes: ' . $deleted;
 	}
@@ -93,22 +88,31 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 		$processed = 0;
 
 		foreach ($rows as $row) {
-			$uuid = $row['uuid'];
-			$etag = $row['etag'];
-			$changed = $row['changed'];
+			$uuid = (string)($row['uuid'] ?? '');
+			$etag = (string)($row['etag'] ?? '');
+			$changed = (string)($row['changed'] ?? '');
+
+			if ($uuid === '' || $etag === '' || $changed === '') {
+				continue;
+			}
 
 			$collectionKey = $this->normalizeCollectionKey((string)($row['type_alias'] ?? ''));
 
 			$this->upsertSeen($uuid, $etag, $changed, $collectionKey);
+
+			// Supersede only pending upserts (do not touch running jobs)
+			$this->supersedePendingUpserts($uuid, $collectionKey);
+
 			$this->insertUpsertJob($uuid, $etag, $collectionKey);
 
 			if ($changed > $maxChanged) {
 				$maxChanged = $changed;
 			}
+
 			$processed++;
 		}
 
-		$this->updateCheckpointLastChanged($maxChanged);
+		$this->updateLastChanged($maxChanged);
 
 		return $processed;
 	}
@@ -133,9 +137,13 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 		$processed = 0;
 
 		foreach ($rows as $row) {
-			$uuid = $row['source_uuid'];
-			$lastSeenVersion = $row['last_seen_version'];
+			$uuid = (string)($row['source_uuid'] ?? '');
+			$lastSeenVersion = (string)($row['last_seen_version'] ?? '');
 			$collectionKey = $this->normalizeCollectionKey((string)($row['last_seen_collection_key'] ?? ''));
+
+			if ($uuid === '' || $lastSeenVersion === '') {
+				continue;
+			}
 
 			$this->markMissing($uuid);
 
@@ -143,10 +151,25 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 			if ($jobId !== null) {
 				$this->setDeleteJobId($uuid, $jobId);
 			}
+
 			$processed++;
 		}
 
 		return $processed;
+	}
+
+	/* ---------- Supersede ---------- */
+
+	private function supersedePendingUpserts(string $uuid, string $collectionKey): void {
+		$this->exec(
+			"UPDATE base3_embedding_job
+			SET state = 'superseded',
+				updated_at = NOW()
+			WHERE source_uuid = '" . $this->escBin($uuid) . "'
+				AND collection_key = '" . $this->esc($collectionKey) . "'
+				AND job_type = 'upsert'
+				AND state = 'pending'"
+		);
 	}
 
 	/* ---------- Seen / Job helpers ---------- */
@@ -201,11 +224,10 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 				AND source_version = '" . $this->escBin($lastSeenVersion) . "'
 				AND collection_key = '" . $this->esc($collectionKey) . "'
 				AND job_type = 'delete'
-			ORDER BY job_id DESC
 			LIMIT 1"
 		);
 
-		return $row['job_id'] ?? null;
+		return isset($row['job_id']) ? (int)$row['job_id'] : null;
 	}
 
 	private function setDeleteJobId(string $uuid, int $jobId): void {
@@ -216,44 +238,55 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 		);
 	}
 
-	/* ---------- Checkpoint ---------- */
+	/* ---------- State (checkpoint replacement) ---------- */
 
-	private function loadCheckpoint(): array {
-		$row = $this->queryOne(
-			"SELECT last_changed, last_run_at
-			FROM base3_embedding_checkpoint
-			WHERE name = '" . self::CHECKPOINT_NAME . "'
-			LIMIT 1"
-		);
+	private function loadCheckpointFromState(): array {
+		$lastChanged = (string)$this->state->get($this->stateKey('last_changed'), self::DEFAULT_LAST_CHANGED);
+		$lastRunAt = (string)$this->state->get($this->stateKey('last_run_at'), self::DEFAULT_LAST_RUN_AT);
+
+		$lastChanged = trim($lastChanged) !== '' ? $lastChanged : self::DEFAULT_LAST_CHANGED;
+		$lastRunAt = trim($lastRunAt) !== '' ? $lastRunAt : self::DEFAULT_LAST_RUN_AT;
 
 		return [
-			'last_changed' => $row['last_changed'] ?? '1970-01-01 00:00:00',
-			'last_run_at' => $row['last_run_at'] ?? '1970-01-01 00:00:00'
+			'last_changed' => $lastChanged,
+			'last_run_at' => $lastRunAt
 		];
 	}
 
+	private function touchRunAt(): void {
+		$this->state->set($this->stateKey('last_run_at'), $this->nowSqlString());
+	}
+
+	private function updateLastChanged(string $lastChanged): void {
+		$lastChanged = trim($lastChanged);
+		if ($lastChanged === '') {
+			return;
+		}
+
+		$this->state->set($this->stateKey('last_changed'), $lastChanged);
+	}
+
+	private function stateKey(string $suffix): string {
+		return 'missionbay.xrm.embedding.' . self::CHECKPOINT_NAME . '.' . $suffix;
+	}
+
+	private function nowSqlString(): string {
+		return date('Y-m-d H:i:s');
+	}
+
 	private function shouldRun(array $checkpoint): bool {
-		if ($checkpoint['last_run_at'] === '1970-01-01 00:00:00') {
+		$lastRunRaw = (string)($checkpoint['last_run_at'] ?? '');
+
+		if ($lastRunRaw === '' || $lastRunRaw === self::DEFAULT_LAST_RUN_AT) {
 			return true;
 		}
-		$lastRunAt = strtotime((string)$checkpoint['last_run_at']);
+
+		$lastRunAt = strtotime($lastRunRaw);
+		if ($lastRunAt === false) {
+			return true;
+		}
+
 		return (time() - $lastRunAt) >= self::MIN_INTERVAL_SECONDS;
-	}
-
-	private function touchCheckpointRunAt(): void {
-		$this->exec(
-			"UPDATE base3_embedding_checkpoint
-			SET last_run_at = NOW()
-			WHERE name = '" . self::CHECKPOINT_NAME . "'"
-		);
-	}
-
-	private function updateCheckpointLastChanged(string $lastChanged): void {
-		$this->exec(
-			"UPDATE base3_embedding_checkpoint
-			SET last_changed = '" . $this->esc($lastChanged) . "'
-			WHERE name = '" . self::CHECKPOINT_NAME . "'"
-		);
 	}
 
 	/* ---------- Schema ---------- */
@@ -261,14 +294,6 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 	private function ensureTables(): void {
 		$this->exec($this->getJobTableSql());
 		$this->exec($this->getSeenTableSql());
-		$this->exec($this->getCheckpointTableSql());
-
-		$this->exec(
-			"INSERT IGNORE INTO base3_embedding_checkpoint
-				(name, last_changed, last_run_at)
-			VALUES
-				('" . self::CHECKPOINT_NAME . "', '1970-01-01 00:00:00', '1970-01-01 00:00:00')"
-		);
 	}
 
 	private function getJobTableSql(): string {
@@ -313,23 +338,11 @@ final class XrmEmbeddingEnqueueJob implements IJob {
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 	}
 
-	private function getCheckpointTableSql(): string {
-		return "CREATE TABLE IF NOT EXISTS base3_embedding_checkpoint (
-			name VARCHAR(64) NOT NULL,
-			last_changed DATETIME NOT NULL DEFAULT '1970-01-01 00:00:00',
-			last_run_at DATETIME NOT NULL,
-			PRIMARY KEY (name)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-	}
-
 	/* ---------- Helpers ---------- */
 
 	private function normalizeCollectionKey(string $key): string {
 		$key = trim($key);
-		if ($key === '') {
-			return self::DEFAULT_COLLECTION_KEY;
-		}
-		return $key;
+		return $key !== '' ? $key : self::DEFAULT_COLLECTION_KEY;
 	}
 
 	/* ---------- DB helpers ---------- */

@@ -22,7 +22,7 @@ final class XrmEmbeddingWorkerJob implements IJob {
 	}
 
 	public function isActive() {
-		return true;
+		return false;
 	}
 
 	public function getPriority() {
@@ -37,7 +37,7 @@ final class XrmEmbeddingWorkerJob implements IJob {
 
 		$flowConfig = $this->loadFlowConfig();
 		if (!$flowConfig) {
-			return 'Invalid embedding flow JSON';
+			return 'Invalid embedding flow JSON' . "\n\n===\n\n" . self::FLOW_FILE . "\n\n===\n\n" . $flowConfig . "\n\n===\n\n";
 		}
 
 		$context = $this->contextFactory->createContext();
