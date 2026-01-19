@@ -37,7 +37,7 @@ final class XrmEmbeddingWorkerJob implements IJob {
 
 		$flowConfig = $this->loadFlowConfig();
 		if (!$flowConfig) {
-			return 'Invalid embedding flow JSON' . "\n\n===\n\n" . self::FLOW_FILE . "\n\n===\n\n" . $flowConfig . "\n\n===\n\n";
+			return 'Invalid embedding flow JSON';
 		}
 
 		$context = $this->contextFactory->createContext();
