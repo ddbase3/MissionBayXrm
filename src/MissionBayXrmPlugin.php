@@ -5,8 +5,6 @@ namespace MissionBayXrm;
 use Base3\Api\ICheck;
 use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
-use MissionBay\Api\IAgentRagPayloadNormalizer;
-use MissionBayXrm\Agent\XrmAgentRagPayloadNormalizer;
 
 class MissionBayXrmPlugin implements IPlugin, ICheck {
 
@@ -21,9 +19,7 @@ class MissionBayXrmPlugin implements IPlugin, ICheck {
 	// Implementation of IPlugin
 
 	public function init() {
-		$this->container
-			->set(self::getName(), $this, IContainer::SHARED)
-			->set(IAgentRagPayloadNormalizer::class, fn() => new XrmAgentRagPayloadNormalizer(), IContainer::SHARED);
+		$this->container->set(self::getName(), $this, IContainer::SHARED);
 	}
 
 	// Implementation of ICheck

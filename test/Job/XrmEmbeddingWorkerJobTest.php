@@ -3,7 +3,7 @@
 namespace Test\MissionBayXrm\Job;
 
 use Base3\Database\Api\IDatabase;
-use MissionBay\Api\IAgentContext;
+use AssistantFoundation\Api\IAgentContext;
 use MissionBay\Api\IAgentContextFactory;
 use MissionBay\Api\IAgentFlow;
 use MissionBay\Api\IAgentFlowFactory;

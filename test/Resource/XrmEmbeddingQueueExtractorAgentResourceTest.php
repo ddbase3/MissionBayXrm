@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use MissionBayXrm\Resource\XrmEmbeddingQueueExtractorAgentResource;
 use Base3\Database\Api\IDatabase;
 use MissionBay\Api\IAgentConfigValueResolver;
-use MissionBay\Api\IAgentContext;
+use AssistantFoundation\Api\IAgentContext;
 use MissionBay\Dto\AgentContentItem;
 
 /**
@@ -17,6 +17,13 @@ class XrmEmbeddingQueueExtractorAgentResourceTest extends TestCase {
 	private function makeContextStub(): IAgentContext {
 		// Extractor does not read context variables in current implementation.
 		return $this->createStub(IAgentContext::class);
+	}
+
+	public function testExtractorUsesCurrentAssistantContextContract(): void {
+		$method = new \ReflectionMethod(XrmEmbeddingQueueExtractorAgentResource::class, 'extract');
+		$contextType = $method->getParameters()[0]->getType();
+		$this->assertInstanceOf(\ReflectionNamedType::class, $contextType);
+		$this->assertSame(IAgentContext::class, $contextType->getName());
 	}
 
 	public function testGetName(): void {

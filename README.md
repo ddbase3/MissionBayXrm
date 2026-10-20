@@ -102,7 +102,7 @@ The embedding worker executes the JSON-defined flow.
 
 ## Flow Example (Embedding)
 
-Below is a working example flow configuration.
+The following is a **legacy flow example** from the previous embedding node contract. It is **not** directly usable with the current MissionBay version: review the node (`AiIndexingNode` replaces `AiEmbeddingNode`) and configure a current `IRetrievalIndex` implementation/collection definition before running it.
 
 ```json
 {
@@ -208,9 +208,9 @@ Below is a working example flow configuration.
 
 ## Components
 
-### AiEmbeddingNode (Coordinator)
+### AiIndexingNode (current coordinator)
 
-`AiEmbeddingNode` orchestrates the full pipeline.
+The current MissionBay implementation is `AiIndexingNode`. Older flow files and resources must be migrated separately; the startup compatibility fix does not modify user-defined flow configurations.
 
 **Inputs**
 
@@ -234,7 +234,7 @@ Below is a working example flow configuration.
 * `parser` → `IAgentContentParser`
 * `chunker` → `IAgentChunker`
 * `embedder` → `IAiEmbeddingModel`
-* `vectordb` → `IAgentVectorStore`
+* `vectordb` → `AssistantFoundation\Api\IRetrievalIndex`
 * `logger` → `ILogger` (optional)
 
 **Outputs**
@@ -322,7 +322,7 @@ Creates numeric vectors from chunk text.
 * Input: array of chunk texts
 * Output: array of vectors (`float[]`)
 
-The coordinator assigns vectors back to each `AgentEmbeddingChunk`.
+The active `AiIndexingNode` produces `AssistantFoundation\Dto\RetrievalIndexItem` objects and attaches generated dense vectors.
 
 ---
 
@@ -342,10 +342,10 @@ Persists points in Qdrant.
 **Key behaviors**
 
 * Ensures collections exist
-* Optionally ensures payload indexes based on the normalizer schema
+* Uses the configured `IRetrievalCollectionDefinition` for payload and index schema
 * Supports:
 
-  * `upsert(AgentEmbeddingChunk)`
+  * `upsert(RetrievalIndexItem)`
   * `existsByHash(collectionKey, hash)`
   * `deleteByFilter(collectionKey, filter)`
   * `search(collectionKey, vector, limit, minScore, filterSpec)`
@@ -357,28 +357,22 @@ Persists points in Qdrant.
 
 ---
 
-### Payload Normalizer: XrmAgentRagPayloadNormalizer
+### Retrieval payload contract (current MissionBay)
 
-Maps `AgentEmbeddingChunk` to a Qdrant payload.
+`MissionBay\Api\IAgentRagPayloadNormalizer` and `MissionBay\Dto\AgentEmbeddingChunk`
+no longer exist in the installed MissionBay version. The legacy
+`XrmAgentRagPayloadNormalizer` and its container binding have been removed.
 
-**Important agreements**
-
-* `name` is stored as a top-level payload field (not inside meta)
-* `name` is indexed as `text`
-* Domain metadata is preserved as `payload.meta` (not indexed)
-
-**Filterable fields (indexed)**
-
-* `hash` (keyword)
-* `collection_key` (keyword)
-* `content_uuid` (keyword)
-* `chunktoken` (keyword)
-* `chunk_index` (integer)
-* `type_alias` (keyword)
-* `archive` (integer 0|1)
-* `public` (integer 0|1)
-* `tags` (keyword array)
-* `ref_uuids` (keyword array)
+`AssistantFoundation\Api\IRetrievalCollectionDefinition` now owns the
+index schema, collection mapping, payload validation and projection used by
+`MissionBay\Node\Ai\AiIndexingNode` and the Qdrant backend. The generic
+`MissionBay\Retrieval\DefaultRetrievalCollectionDefinition` emits only
+its explicitly defined fields (`text`, `hash`, `collection_key`,
+`content_uuid`, `chunktoken`, `chunk_index`, and optional `num_chunks`).
+XRM-specific filterable metadata such as `tags`, `ref_uuids`, `public` and
+`archive` must be provided by a dedicated collection-definition implementation
+if those fields are needed. Do not assume the old normalizer's payload
+configuration is still active.
 
 ---
 
@@ -439,7 +433,7 @@ This job should also track `last_cleanup_at` via `IStateStore`, e.g.
 
 ## Embedding Stages (Detailed)
 
-This section describes every step as executed by `AiEmbeddingNode`.
+This historical overview describes the XRM embedding flow. The current MissionBay coordinator is `AiIndexingNode`; verify and update any persisted flow definitions that still reference the removed `AiEmbeddingNode`.
 
 ### Stage 0: Input Validation
 
@@ -519,7 +513,7 @@ For each normalized chunk:
   * `parsed.metadata`
   * `rawChunk.meta`
 * Add `num_chunks` to each chunk metadata
-* Create `AgentEmbeddingChunk`:
+* Create `RetrievalIndexItem`:
 
   * `collectionKey`
   * `chunkIndex`
@@ -541,7 +535,7 @@ For each chunk:
 
 * Skip empty text
 * Skip if vector missing
-* `vectordb->upsert(chunk)`
+* `vectordb->upsert(item)`
 
 ### Stage 9: Ack / Fail
 

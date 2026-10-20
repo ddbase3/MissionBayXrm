@@ -3,8 +3,6 @@
 namespace Test\MissionBayXrm;
 
 use Base3\Api\IContainer;
-use MissionBay\Api\IAgentRagPayloadNormalizer;
-use MissionBayXrm\Agent\XrmAgentRagPayloadNormalizer;
 use MissionBayXrm\MissionBayXrmPlugin;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +17,7 @@ final class MissionBayXrmPluginTest extends TestCase {
 		$this->assertSame('missionbayxrmplugin', MissionBayXrmPlugin::getName());
 	}
 
-	public function testInitRegistersPluginAndNormalizer(): void {
+	public function testInitRegistersOnlyCurrentPlugin(): void {
 		$container = $this->createMock(IContainer::class);
 
 		$calls = [];
@@ -37,37 +35,11 @@ final class MissionBayXrmPluginTest extends TestCase {
 		$plugin = new MissionBayXrmPlugin($container);
 		$plugin->init();
 
-		$this->assertCount(2, $calls);
+		$this->assertCount(1, $calls);
 
 		$this->assertSame(MissionBayXrmPlugin::getName(), $calls[0]['name']);
 		$this->assertSame(IContainer::SHARED, $calls[0]['flags']);
 		$this->assertSame($plugin, $calls[0]['def']);
-
-		$this->assertSame(IAgentRagPayloadNormalizer::class, $calls[1]['name']);
-		$this->assertSame(IContainer::SHARED, $calls[1]['flags']);
-		$this->assertIsCallable($calls[1]['def']);
-	}
-
-	public function testInitFactoryCreatesXrmAgentRagPayloadNormalizer(): void {
-		$container = $this->createMock(IContainer::class);
-
-		$capturedFactory = null;
-
-		$container->method('set')
-			->willReturnCallback(function (string $name, $classDefinition, $flags) use (&$capturedFactory, $container) {
-				if ($name === IAgentRagPayloadNormalizer::class) {
-					$capturedFactory = $classDefinition;
-				}
-				return $container;
-			});
-
-		$plugin = new MissionBayXrmPlugin($container);
-		$plugin->init();
-
-		$this->assertIsCallable($capturedFactory);
-
-		$instance = $capturedFactory();
-		$this->assertInstanceOf(XrmAgentRagPayloadNormalizer::class, $instance);
 	}
 
 	public function testCheckDependenciesReturnsOkWhenMissionBayPluginInstalled(): void {

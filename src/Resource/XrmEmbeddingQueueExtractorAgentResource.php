@@ -3,7 +3,7 @@
 namespace MissionBayXrm\Resource;
 
 use Base3\Database\Api\IDatabase;
-use MissionBay\Api\IAgentContext;
+use AssistantFoundation\Api\IAgentContext;
 use MissionBay\Api\IAgentContentExtractor;
 use MissionBay\Api\IAgentConfigValueResolver;
 use MissionBay\Dto\AgentContentItem;
