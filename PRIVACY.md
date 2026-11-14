@@ -10,7 +10,7 @@ When enabled in the configured embedding flow, parsed and chunked entry content 
 
 ## Compatibility fix
 
-`MissionBay\\Api\\IAgentRagPayloadNormalizer` and its `AgentEmbeddingChunk`-based implementation no longer exist in the installed MissionBay contract. The unused XRM implementation and its DI registration have been removed. Payload construction now belongs to the host-configured `AssistantFoundation\\Api\\IRetrievalCollectionDefinition`. This fix does not introduce a new database, read additional personal attributes, change retention policy, export data, or modify stored records. It does not itself change which collection definition the host uses. XRM-specific payload fields are not guaranteed by the generic default definition; operators must verify the intended indexing configuration before resuming a production embedding flow.
+`Base3\\MissionBay\\Api\\IAgentRagPayloadNormalizer` and its `AgentEmbeddingChunk`-based implementation no longer exist in the installed MissionBay contract. The unused XRM implementation and its DI registration have been removed. Payload construction now belongs to the host-configured `Base3\\AssistantFoundation\\Api\\IRetrievalCollectionDefinition`. This fix does not introduce a new database, read additional personal attributes, change retention policy, export data, or modify stored records. It does not itself change which collection definition the host uses. XRM-specific payload fields are not guaranteed by the generic default definition; operators must verify the intended indexing configuration before resuming a production embedding flow.
 
 ## Access, retention, deletion and known limits
 

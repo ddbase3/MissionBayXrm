@@ -1,20 +1,34 @@
 <?php declare(strict_types=1);
 
-namespace Test\MissionBayXrm\Resource;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use MissionBay\Dto\AgentContentItem;
-use MissionBay\Dto\AgentParsedContent;
-use MissionBayXrm\Resource\XrmAccountMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmAddressMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmContactMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmDateMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmFileMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmProductMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmProjectMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmResourceMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmTagMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmTaskMetaParserAgentResource;
-use MissionBayXrm\Resource\XrmTextMetaParserAgentResource;
+namespace Base3\MissionBayXrm\Test\Resource;
+
+use Base3\MissionBay\Dto\AgentContentItem;
+use Base3\MissionBay\Dto\AgentParsedContent;
+use Base3\MissionBayXrm\Resource\XrmAccountMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmAddressMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmContactMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmDateMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmFileMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmProductMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmProjectMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmResourceMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmTagMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmTaskMetaParserAgentResource;
+use Base3\MissionBayXrm\Resource\XrmTextMetaParserAgentResource;
 use PHPUnit\Framework\TestCase;
 
 /**

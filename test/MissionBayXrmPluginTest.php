@@ -1,14 +1,28 @@
 <?php declare(strict_types=1);
 
-namespace Test\MissionBayXrm;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use Base3\Api\IContainer;
-use MissionBayXrm\MissionBayXrmPlugin;
+namespace Base3\MissionBayXrm\Test;
+
+use Base3\CoreFoundation\Api\IContainer;
+use Base3\MissionBayXrm\MissionBayXrmPlugin;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MissionBayXrm\MissionBayXrmPlugin
+ * @covers \Base3\MissionBayXrm\MissionBayXrmPlugin
  */
 #[AllowMockObjectsWithoutExpectations]
 final class MissionBayXrmPluginTest extends TestCase {

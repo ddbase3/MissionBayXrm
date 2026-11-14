@@ -1,13 +1,27 @@
 <?php declare(strict_types=1);
 
-namespace MissionBayXrm\Resource;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use Base3\Database\Api\IDatabase;
-use AssistantFoundation\Api\IAgentContext;
-use MissionBay\Api\IAgentContentExtractor;
-use MissionBay\Api\IAgentConfigValueResolver;
-use MissionBay\Dto\AgentContentItem;
-use MissionBay\Resource\AbstractAgentResource;
+namespace Base3\MissionBayXrm\Resource;
+
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\AssistantFoundation\Api\IAgentContext;
+use Base3\MissionBay\Api\IAgentContentExtractor;
+use Base3\MissionBay\Api\IAgentConfigValueResolver;
+use Base3\MissionBay\Dto\AgentContentItem;
+use Base3\MissionBay\Resource\AbstractAgentResource;
 
 final class XrmEmbeddingQueueExtractorAgentResource extends AbstractAgentResource implements IAgentContentExtractor {
 

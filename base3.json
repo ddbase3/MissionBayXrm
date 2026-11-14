@@ -1,0 +1,11 @@
+{
+	"manifestVersion": 1,
+	"name": "MissionBayXrm",
+	"namespace": "Base3\\MissionBayXrm",
+	"version": "0.0.0",
+	"dependencies": {
+		"CoreFoundation": ">=4.10.0",
+		"AssistantFoundation": ">=4.18.0",
+		"MissionBay": ">=4.40.0"
+	}
+}

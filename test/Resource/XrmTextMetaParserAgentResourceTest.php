@@ -1,14 +1,28 @@
 <?php declare(strict_types=1);
 
-namespace Test\MissionBayXrm\Resource;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
+
+namespace Base3\MissionBayXrm\Test\Resource;
 
 use PHPUnit\Framework\TestCase;
-use MissionBayXrm\Resource\XrmTextMetaParserAgentResource;
-use MissionBay\Dto\AgentContentItem;
-use MissionBay\Dto\AgentParsedContent;
+use Base3\MissionBayXrm\Resource\XrmTextMetaParserAgentResource;
+use Base3\MissionBay\Dto\AgentContentItem;
+use Base3\MissionBay\Dto\AgentParsedContent;
 
 /**
- * @covers \MissionBayXrm\Resource\XrmTextMetaParserAgentResource
+ * @covers \Base3\MissionBayXrm\Resource\XrmTextMetaParserAgentResource
  */
 class XrmTextMetaParserAgentResourceTest extends TestCase {
 

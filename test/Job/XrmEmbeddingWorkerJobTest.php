@@ -1,18 +1,32 @@
 <?php declare(strict_types=1);
 
-namespace Test\MissionBayXrm\Job;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use Base3\Database\Api\IDatabase;
-use AssistantFoundation\Api\IAgentContext;
-use MissionBay\Api\IAgentContextFactory;
-use MissionBay\Api\IAgentFlow;
-use MissionBay\Api\IAgentFlowFactory;
-use MissionBayXrm\Job\XrmEmbeddingWorkerJob;
+namespace Base3\MissionBayXrm\Test\Job;
+
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\AssistantFoundation\Api\IAgentContext;
+use Base3\MissionBay\Api\IAgentContextFactory;
+use Base3\MissionBay\Api\IAgentFlow;
+use Base3\MissionBay\Api\IAgentFlowFactory;
+use Base3\MissionBayXrm\Job\XrmEmbeddingWorkerJob;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MissionBayXrm\Job\XrmEmbeddingWorkerJob
+ * @covers \Base3\MissionBayXrm\Job\XrmEmbeddingWorkerJob
  */
 #[AllowMockObjectsWithoutExpectations]
 final class XrmEmbeddingWorkerJobTest extends TestCase {

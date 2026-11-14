@@ -53,7 +53,7 @@ The pipeline uses two database tables:
 
 Runtime scheduling and cursors are stored via:
 
-* `Base3\State\Api\IStateStore`
+* `Base3\CoreFoundation\State\Api\IStateStore`
 
   * Backed by `base3_statestore` (JSON values, optional TTL)
 
@@ -234,7 +234,7 @@ The current MissionBay implementation is `AiIndexingNode`. Older flow files and 
 * `parser` → `IAgentContentParser`
 * `chunker` → `IAgentChunker`
 * `embedder` → `IAiEmbeddingModel`
-* `vectordb` → `AssistantFoundation\Api\IRetrievalIndex`
+* `vectordb` → `Base3\AssistantFoundation\Api\IRetrievalIndex`
 * `logger` → `ILogger` (optional)
 
 **Outputs**
@@ -322,7 +322,7 @@ Creates numeric vectors from chunk text.
 * Input: array of chunk texts
 * Output: array of vectors (`float[]`)
 
-The active `AiIndexingNode` produces `AssistantFoundation\Dto\RetrievalIndexItem` objects and attaches generated dense vectors.
+The active `AiIndexingNode` produces `Base3\AssistantFoundation\Dto\RetrievalIndexItem` objects and attaches generated dense vectors.
 
 ---
 
@@ -359,14 +359,14 @@ Persists points in Qdrant.
 
 ### Retrieval payload contract (current MissionBay)
 
-`MissionBay\Api\IAgentRagPayloadNormalizer` and `MissionBay\Dto\AgentEmbeddingChunk`
+`Base3\MissionBay\Api\IAgentRagPayloadNormalizer` and `Base3\MissionBay\Dto\AgentEmbeddingChunk`
 no longer exist in the installed MissionBay version. The legacy
 `XrmAgentRagPayloadNormalizer` and its container binding have been removed.
 
-`AssistantFoundation\Api\IRetrievalCollectionDefinition` now owns the
+`Base3\AssistantFoundation\Api\IRetrievalCollectionDefinition` now owns the
 index schema, collection mapping, payload validation and projection used by
-`MissionBay\Node\Ai\AiIndexingNode` and the Qdrant backend. The generic
-`MissionBay\Retrieval\DefaultRetrievalCollectionDefinition` emits only
+`Base3\MissionBay\Node\Ai\AiIndexingNode` and the Qdrant backend. The generic
+`Base3\MissionBay\Retrieval\DefaultRetrievalCollectionDefinition` emits only
 its explicitly defined fields (`text`, `hash`, `collection_key`,
 `content_uuid`, `chunktoken`, `chunk_index`, and optional `num_chunks`).
 XRM-specific filterable metadata such as `tags`, `ref_uuids`, `public` and

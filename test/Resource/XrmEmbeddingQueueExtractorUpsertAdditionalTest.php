@@ -1,16 +1,30 @@
 <?php declare(strict_types=1);
 
-namespace Test\MissionBayXrm\Resource;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use AssistantFoundation\Api\IAgentContext;
-use Base3\Database\Api\IDatabase;
-use MissionBay\Api\IAgentConfigValueResolver;
-use MissionBay\Dto\AgentContentItem;
-use MissionBayXrm\Resource\XrmEmbeddingQueueExtractorAgentResource;
+namespace Base3\MissionBayXrm\Test\Resource;
+
+use Base3\AssistantFoundation\Api\IAgentContext;
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\MissionBay\Api\IAgentConfigValueResolver;
+use Base3\MissionBay\Dto\AgentContentItem;
+use Base3\MissionBayXrm\Resource\XrmEmbeddingQueueExtractorAgentResource;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MissionBayXrm\Resource\XrmEmbeddingQueueExtractorAgentResource
+ * @covers \Base3\MissionBayXrm\Resource\XrmEmbeddingQueueExtractorAgentResource
  */
 final class XrmEmbeddingQueueExtractorUpsertAdditionalTest extends TestCase {
 

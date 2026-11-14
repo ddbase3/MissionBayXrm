@@ -1,11 +1,25 @@
 <?php declare(strict_types=1);
 
-namespace MissionBayXrm\Resource;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use MissionBay\Api\IAgentContentParser;
-use MissionBay\Dto\AgentContentItem;
-use MissionBay\Dto\AgentParsedContent;
-use MissionBay\Resource\AbstractAgentResource;
+namespace Base3\MissionBayXrm\Resource;
+
+use Base3\MissionBay\Api\IAgentContentParser;
+use Base3\MissionBay\Dto\AgentContentItem;
+use Base3\MissionBay\Dto\AgentParsedContent;
+use Base3\MissionBay\Resource\AbstractAgentResource;
 
 final class XrmResourceMetaParserAgentResource extends AbstractAgentResource implements IAgentContentParser {
 

@@ -1,15 +1,29 @@
 <?php declare(strict_types=1);
 
-namespace Test\MissionBayXrm\Job;
+/***********************************************************************
+ * This file is part of MissionBayXrm for BASE3 Framework.
+ *
+ * MissionBayXrm integrates XRM content with MissionBay agent workflows.
+ * Its pipeline indexes XRM sysentries into a vector database.
+ * Incremental updates, deduplication and deletions are coordinated.
+ *
+ * Developed by Daniel Dahme
+ * Licensed under GPL-3.0
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * https://base3.de
+ **********************************************************************/
 
-use Base3\Database\Api\IDatabase;
-use Base3\State\Api\IStateStore;
+namespace Base3\MissionBayXrm\Test\Job;
+
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\CoreFoundation\State\Api\IStateStore;
 use Base3\Test\State\StateStoreStub;
-use MissionBayXrm\Job\XrmEmbeddingEnqueueJob;
+use Base3\MissionBayXrm\Job\XrmEmbeddingEnqueueJob;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MissionBayXrm\Job\XrmEmbeddingEnqueueJob
+ * @covers \Base3\MissionBayXrm\Job\XrmEmbeddingEnqueueJob
  */
 final class XrmEmbeddingEnqueueJobTest extends TestCase {
 
