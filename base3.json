@@ -2,10 +2,20 @@
 	"manifestVersion": 1,
 	"name": "MissionBayXrm",
 	"namespace": "Base3\\MissionBayXrm",
-	"version": "0.0.0",
+	"version": "5.0.0",
+        "description": "Embedding pipeline that synchronizes XRM sysentry content into a Qdrant vector database",
+        "license": "GPL-3.0-or-later",
+	"maintainers": [
+		{
+			"name": "Daniel Dahme",
+			"url": "https://www.base3.de",
+			"email": "info@base3.de"
+		}
+	],
+	"repository": "https://github.com/ddbase3/MissionBayXrm",
 	"dependencies": {
-		"CoreFoundation": ">=4.10.0",
-		"AssistantFoundation": ">=4.18.0",
-		"MissionBay": ">=4.40.0"
+		"CoreFoundation": ">=5.0.0",
+		"AssistantFoundation": ">=5.0.0",
+		"MissionBay": ">=5.0.0"
 	}
 }
